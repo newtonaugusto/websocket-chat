@@ -1,4 +1,3 @@
-from http import client
 from os import environ
 import socket
 import select
@@ -19,6 +18,8 @@ clients = {}
 print(f'Listening for connections on {IP}:{PORT}...')
 
 # Lida com as mensagens recebidas
+
+
 def receive_message(client_socket):
     try:
         message_header = client_socket.recv(HEADER_LENGTH)
@@ -32,33 +33,40 @@ def receive_message(client_socket):
             'data': client_socket.recv(message_length)
         }
         return context
-    except:
+    except BaseException:
         # Mensagens vazias ou cliente abortou a conexão abruptamente
         return False
 
+
+def send_message(client_socket):
+    pass
+
+
 while True:
-    read_sockets, _, excetion_sockets = select.select(socket_list, [], socket_list)
+    read_sockets, _, excetion_sockets = select.select(
+        socket_list, [], socket_list)
 
     for notified_socket in read_sockets:
         # if notified socket is a server socket - new connection, accept it
         if notified_socket == server_socket:
             client_socket, client_address = server_socket.accept()
 
-            user = receive_message(client_socket)
-
-            if user is False:
+            data = receive_message(client_socket)
+            if data is False:
                 continue
 
             socket_list.append(client_socket)
-            clients[client_socket] = user
+            clients[client_socket] = data
 
-            print(f"Accepted new connection from {client_address}:{user['data'].decode('utf-8')}")
+            print(f"Accepted new connection from \
+                  {client_address}:{data['data'].decode('utf-8')}")
         # Else existing socket is sending a message
         else:
             message = receive_message(notified_socket)
 
             if message is False:
-                print(f"Closed connection from {clients[notified_socket]['data'].decode('utf-8')}")
+                print(f"Closed connection from  \
+                      {clients[notified_socket]['data'].decode('utf-8')}")
                 socket_list.remove(notified_socket)
 
                 del clients[notified_socket]
@@ -68,13 +76,17 @@ while True:
             # Get user by notified socket, so we will know who sent the message
             user = clients[notified_socket]
 
-            print(f'Received message from {user["data"].decode("utf-8")}: {message["data"].decode("utf-8")}')
-
+            print(f'Received message from {user["data"].decode("utf-8").split(",")[0]}: {message["data"].decode("utf-8")}')
+            receiver = user["data"].decode("utf-8").split(",")[0]
             for client_socket in clients:
+                print(client_socket)
+                # print(receiver+','+client_socket.getpeername()[1])
+                # print("1: ",receiver)
+                client_socket.send("teste".encode("utf-8"))
                 if client_socket != notified_socket:
                     # Send user and message (both with their headers)
                     client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
-        
+
     # handle some socket exceptions
     for notified_socket in excetion_sockets:
         # Remove from list for socket.socket()
