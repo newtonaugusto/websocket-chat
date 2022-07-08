@@ -5,10 +5,10 @@ import errno
 from os import environ
 import sys
 
-HEADER_LENGTH = environ.get("HEADER_LENGTH")
+HEADER_LENGTH = int(environ.get("HEADER_LENGTH"))
 IP = environ.get("IP")
-PORT = environ.get("PORT")
-
+PORT = int(environ.get("PORT"))
+# print(HEADER_LENGTH, IP, PORT)
 _username = input("Username: ")
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,7 +22,10 @@ client_socket.send(username_header + username)
 while True:
     message = input(f"{_username} > ")
 
-    if message:
+    if message == "exit()":
+        print("Desconectando do Servidor...")
+        sys.exit()
+    elif message:
         #Encode messagem em bytes, prepara o header, converte em bytes e envia
         message = message.encode("utf-8")
         message_header = f"{len(message):<{HEADER_LENGTH}}".encode("utf-8")
@@ -45,11 +48,12 @@ while True:
             message = client_socket.recv(message_length).decode("utf-8")
 
             print(f"{username} > {message}")
+            break
     except IOError as e:
         if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-            print(f"Reading error: {str(e)}")
+            print(f"1- Reading error: {str(e)}")
             sys.exit()
         continue
     except Exception as e:
-        print(f"Reading error: {str(e)}")
+        print(f"2- Reading error: {str(e)}")
         sys.exit()

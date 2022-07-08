@@ -5,7 +5,7 @@ import select
 
 IP = environ.get("IP")
 PORT = int(environ.get("PORT"))
-HEADER_LENGTH = environ.get("HEADER")
+HEADER_LENGTH = int(environ.get("HEADER_LENGTH"))
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
